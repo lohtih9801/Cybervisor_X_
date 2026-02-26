@@ -4,8 +4,6 @@ export default function Settings() {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
 
-  /* ================= LOAD DATA ================= */
-
   useEffect(() => {
     const storedUser =
       JSON.parse(localStorage.getItem("user")) ||
@@ -18,8 +16,6 @@ export default function Settings() {
 
     setUsers(storedUsers);
   }, []);
-
-  /* ================= SESSION CHECK ================= */
 
   if (!currentUser) {
     return (
@@ -40,9 +36,9 @@ export default function Settings() {
     );
   }
 
-  /* ================= UPDATE USER STATUS ================= */
+  const updateUserStatus = async (username, status) => {
+    const userToUpdate = users.find(u => u.username === username);
 
-  const updateUserStatus = (username, status) => {
     const updatedUsers = users.map((u) => {
       if (u.username === username) {
         return {
@@ -56,12 +52,27 @@ export default function Settings() {
 
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUsers(updatedUsers);
-
-    // Notify other components
     window.dispatchEvent(new Event("usersUpdated"));
-  };
 
-  /* ================= DELETE USER ================= */
+    // 🔥 Send approval or rejection email
+    if (userToUpdate?.email) {
+      try {
+        await fetch("http://localhost:5000/update-user-status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: userToUpdate.email,
+            username: userToUpdate.username,
+            status
+          })
+        });
+      } catch (err) {
+        console.log("Status email failed:", err);
+      }
+    }
+  };
 
   const deleteUser = (username) => {
     if (username === currentUser.username) {
@@ -77,8 +88,6 @@ export default function Settings() {
     setUsers(updatedUsers);
   };
 
-  /* ================= UI ================= */
-
   return (
     <div style={{ padding: "30px" }}>
       <h2>User Management</h2>
@@ -92,7 +101,6 @@ export default function Settings() {
 
             <div style={{ marginTop: "4px", fontSize: "12px" }}>
               {u.email && <div>Email: {u.email}</div>}
-              {u.gender && <div>Gender: {u.gender}</div>}
             </div>
 
             <span style={statusBadge(u.status)}>

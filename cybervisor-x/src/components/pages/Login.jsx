@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   getUsers,
   saveUsers,
@@ -13,17 +13,45 @@ export default function Login({ onLogin }) {
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [gender, setGender] = useState("male");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [otpInput, setOtpInput] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState(null);
 
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
-  const users = getUsers();
+  // 👁 Visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+
+  const users = getUsers() || [];
+
+  /* ================= CLEAR FUNCTION ================= */
+
+  const clearAllFields = () => {
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setOtpInput("");
+    setRememberMe(false);
+    setError("");
+  };
+
+  useEffect(() => {
+    clearAllFields();
+  }, [isRegister, isForgot]);
+
+  /* ================= EMAIL VALIDATION ================= */
+
+  const isValidEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   /* ================= PASSWORD STRENGTH ================= */
 
@@ -51,7 +79,7 @@ export default function Login({ onLogin }) {
   }
 
   const logAudit = (action) => {
-    const logs = getAuditLogs();
+    const logs = getAuditLogs() || [];
     logs.push({
       user: username.trim().toLowerCase(),
       action,
@@ -62,10 +90,55 @@ export default function Login({ onLogin }) {
 
   /* ================= OTP ================= */
 
-  const generateOtp = () => {
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    setGeneratedOtp(otp);
-    alert("Simulation OTP: " + otp);
+  const generateOtp = async () => {
+
+    if (!isValidEmail(email)) {
+      setError("Enter valid email address");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          username: username.trim()
+})
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Failed to send OTP");
+        return;
+      }
+
+      alert("OTP sent to your email");
+      setError("");
+
+    } catch {
+      setError("Server error while sending OTP");
+    }
+  };
+
+  const verifyOtpFromServer = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          otp: otpInput
+        })
+      });
+
+      const data = await res.json();
+      return data.success;
+
+    } catch {
+      return false;
+    }
   };
 
   /* ================= REGISTER ================= */
@@ -73,9 +146,20 @@ export default function Login({ onLogin }) {
   const handleRegister = async () => {
 
     const cleanUsername = username.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanUsername || !email || !password || !otpInput) {
-      setError("All fields required");
+    if (!cleanUsername || !cleanEmail || !password || !confirmPassword || !otpInput) {
+      setError("All fields are mandatory");
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setError("Enter valid email address");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -84,12 +168,16 @@ export default function Login({ onLogin }) {
       return;
     }
 
-    if (!generatedOtp || parseInt(otpInput) !== generatedOtp) {
-      setError("Invalid OTP");
+    const otpValid = await verifyOtpFromServer();
+    if (!otpValid) {
+      setError("Invalid or expired OTP");
       return;
     }
 
-    if (users.find(u => u.username.toLowerCase() === cleanUsername)) {
+    if (users.find(u =>
+      u?.username?.toLowerCase() === cleanUsername ||
+      u?.email?.toLowerCase() === cleanEmail
+    )) {
       setError("User already exists");
       return;
     }
@@ -100,8 +188,7 @@ export default function Login({ onLogin }) {
       ...users,
       {
         username: cleanUsername,
-        email,
-        gender,
+        email: cleanEmail,
         password: hashed,
         status: "pending"
       }
@@ -111,9 +198,7 @@ export default function Login({ onLogin }) {
 
     alert("Registration successful. Waiting for admin approval.");
     setIsRegister(false);
-    setPassword("");
-    setOtpInput("");
-    setGeneratedOtp(null);
+    clearAllFields();
   };
 
   /* ================= LOGIN ================= */
@@ -122,13 +207,20 @@ export default function Login({ onLogin }) {
 
     setError("");
 
-    const cleanUsername = username.trim().toLowerCase();
-    const hashed = await hashPassword(password);
+    if (!username || !password) {
+      setError("Enter username/email and password");
+      return;
+    }
 
-    const user = users.find(
-      u =>
-        u.username.toLowerCase() === cleanUsername &&
-        u.password === hashed
+    const hashed = await hashPassword(password);
+    const inputValue = username.trim().toLowerCase();
+
+    const user = users.find(u =>
+      (
+        u?.username?.toLowerCase() === inputValue ||
+        u?.email?.toLowerCase() === inputValue
+      ) &&
+      u?.password === hashed
     );
 
     if (!user) {
@@ -152,6 +244,8 @@ export default function Login({ onLogin }) {
     storage.setItem("lastActivity", Date.now());
 
     logAudit("User Logged In");
+
+    clearAllFields();
     onLogin(user);
   };
 
@@ -159,36 +253,42 @@ export default function Login({ onLogin }) {
 
   const handleResetPassword = async () => {
 
-    const cleanUsername = username.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setError("Enter your registered email");
+      return;
+    }
 
     const user = users.find(
-      u => u.username.toLowerCase() === cleanUsername
+      u => u?.email?.toLowerCase() === cleanEmail
     );
 
     if (!user) {
-      setError("User not found");
+      setError("Email not found");
       return;
     }
 
-    if (!generatedOtp) {
-      setError("Generate OTP first");
+    const otpValid = await verifyOtpFromServer();
+    if (!otpValid) {
+      setError("Invalid or expired OTP");
       return;
     }
 
-    if (parseInt(otpInput) !== generatedOtp) {
-      setError("Incorrect OTP");
-      return;
-    }
-
-    if (!newPassword) {
+    if (!newPassword || !confirmNewPassword) {
       setError("Enter new password");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match");
       return;
     }
 
     const hashed = await hashPassword(newPassword);
 
     const updatedUsers = users.map(u =>
-      u.username.toLowerCase() === cleanUsername
+      u?.email?.toLowerCase() === cleanEmail
         ? { ...u, password: hashed }
         : u
     );
@@ -197,9 +297,7 @@ export default function Login({ onLogin }) {
 
     alert("Password reset successful");
     setIsForgot(false);
-    setNewPassword("");
-    setOtpInput("");
-    setGeneratedOtp(null);
+    clearAllFields();
   };
 
   /* ================= UI ================= */
@@ -233,12 +331,27 @@ export default function Login({ onLogin }) {
           </h2>
 
           <input
-            placeholder="Username"
+            placeholder="Username or Email"
             value={username}
             onChange={e => setUsername(e.target.value)}
             style={input}
           />
 
+          {/* LOGIN PASSWORD */}
+          {!isRegister && !isForgot && (
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                style={input}
+              />
+              <span style={eyeStyle} onClick={() => setShowPassword(!showPassword)}>👁</span>
+            </div>
+          )}
+
+          {/* REGISTER */}
           {isRegister && (
             <>
               <input
@@ -248,52 +361,40 @@ export default function Login({ onLogin }) {
                 style={input}
               />
 
-              <select
-                value={gender}
-                onChange={e => setGender(e.target.value)}
-                style={input}
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </>
-          )}
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  style={input}
+                />
+                {/* <span style={eyeStyle} onClick={() => setShowPassword(!showPassword)}>👁</span> */}
+              </div>
 
-          {!isForgot && (
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={input}
-            />
-          )}
+              <p style={{ fontSize: "13px", color: strengthData.color }}>
+                Strength: {strengthData.strength}
+              </p>
 
-          {isForgot && (
-            <>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  style={input}
+                />
+                <span style={eyeStyle} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>👁</span>
+              </div>
+
               <button onClick={generateOtp} style={otpButton}>
                 Generate OTP
-              </button>
-
-              <button
-                onClick={generateOtp}
-                style={{ ...otpButton, background: "#3b82f6" }}
-              >
-                Resend OTP
               </button>
 
               <input
                 placeholder="Enter OTP"
                 value={otpInput}
                 onChange={e => setOtpInput(e.target.value)}
-                style={input}
-              />
-
-              <input
-                type="password"
-                placeholder="New Password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
                 style={input}
               />
             </>
@@ -343,7 +444,16 @@ export default function Login({ onLogin }) {
     </div>
   );
 }
-/* ================= STYLES (UNCHANGED UI) ================= */
+
+/* ================= STYLES ================= */
+
+const eyeStyle = {
+  position: "absolute",
+  right: "10px",
+  top: "50%",
+  transform: "translateY(-50%)",
+  cursor: "pointer"
+};
 
 const container = {
   height: "100vh",
@@ -435,8 +545,4 @@ const switchLink = {
   color: "#2563eb",
   fontSize: "14px",
   textAlign: "center"
-};
-
-const rememberStyle = {
-  fontSize: "13px"
 };
