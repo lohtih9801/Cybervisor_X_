@@ -1,0 +1,271 @@
+/* =========================
+   CHAT CONTAINER
+========================= */
+
+.chat-box {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 30px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(14px);
+}
+
+.chat-messages {
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 10px;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scroll */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+
+/* =========================
+   MESSAGE BUBBLES
+========================= */
+
+.message {
+  margin-bottom: 25px;
+  padding: 18px;
+  border-radius: 16px;
+  line-height: 1.6;
+  animation: fadeIn 0.3s ease;
+  font-size: 14px;
+}
+
+.message.user {
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.25);
+}
+
+.message.agent {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.message.loading {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* =========================
+   REPORT CARD
+========================= */
+
+.report-card {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* =========================
+   EXECUTIVE SUMMARY
+========================= */
+
+.report-summary {
+  padding: 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  font-size: 14px;
+  position: relative;
+}
+
+/* Severity Badge */
+
+.severity-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Proper Color Coding */
+
+.badge-critical {
+  background: #dc2626;
+  box-shadow: 0 0 12px rgba(220,38,38,0.4);
+}
+
+.badge-high {
+  background: #ea580c;
+  box-shadow: 0 0 10px rgba(234,88,12,0.4);
+}
+
+.badge-medium {
+  background: #d97706;
+  box-shadow: 0 0 10px rgba(217,119,6,0.4);
+}
+
+.badge-low {
+  background: #16a34a;
+  box-shadow: 0 0 10px rgba(22,163,74,0.4);
+}
+
+/* =========================
+   REPORT TABLE
+========================= */
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.report-table thead {
+  background: rgba(59,130,246,0.08);
+}
+
+.report-table th {
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+
+.report-table td {
+  border: 1px solid var(--border);
+  padding: 12px;
+  vertical-align: top;
+}
+
+.report-key {
+  width: 220px;
+  font-weight: 600;
+  background: rgba(59,130,246,0.05);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+}
+
+/* =========================
+   PRIORITY BADGES (TABLE)
+========================= */
+
+.priority-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: capitalize;
+}
+
+.priority-badge.badge-critical {
+  background: #dc2626;
+}
+
+.priority-badge.badge-high {
+  background: #ea580c;
+}
+
+.priority-badge.badge-medium {
+  background: #d97706;
+}
+
+.priority-badge.badge-low {
+  background: #16a34a;
+}
+
+/* =========================
+   STATUS BADGE
+========================= */
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  background: rgba(59,130,246,0.12);
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* =========================
+   STRATEGY LIST
+========================= */
+
+.strategy-list {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.strategy-list li {
+  margin-bottom: 4px;
+}
+
+/* =========================
+   SECTION TITLES
+========================= */
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--primary);
+  padding-left: 10px;
+}
+
+/* =========================
+   INPUT AREA
+========================= */
+
+.chat-input {
+  display: flex;
+  margin-top: 25px;
+  gap: 10px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.chat-input input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+.chat-input button {
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.chat-input button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+}
+
+/* =========================
+   ANIMATION
+========================= */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

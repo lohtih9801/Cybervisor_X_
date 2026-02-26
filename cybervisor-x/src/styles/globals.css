@@ -1,0 +1,27 @@
+:root {
+  --bg: #f4f6f9;
+  --card: rgba(255,255,255,0.75);
+  --text: #1e293b;
+  --border: #e5e7eb;
+  --primary: #2563eb;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --card: rgba(30,41,59,0.7);
+  --text: #f1f5f9;
+  --border: #334155;
+  --primary: #3b82f6;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+}
+
+* {
+  transition: all 0.25s ease;
+}

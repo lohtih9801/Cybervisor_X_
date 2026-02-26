@@ -1,0 +1,36 @@
+body {
+  background: #f4f6f9;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+}
+
+/* Remove any dark backgrounds */
+.app-wrapper {
+  background: #f4f6f9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Smooth transitions everywhere */
+* {
+  transition: all 0.25s ease;
+}
+
+/* Smooth fade animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}

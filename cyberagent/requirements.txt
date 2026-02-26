@@ -1,0 +1,9 @@
+fastapi==0.129.0
+uvicorn==0.40.0
+pydantic==2.12.5
+python-dotenv==1.0.0
+requests==2.32.5
+pytest==7.4.0
+pytest-asyncio==0.23.0
+google-cloud-aiplatform==1.137.0
+google-api-python-client==2.190.0
