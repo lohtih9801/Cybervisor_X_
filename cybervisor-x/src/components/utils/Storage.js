@@ -10,7 +10,9 @@ const DEFAULT_ADMIN = {
   email: "admin@cybervisorx.com",
   gender: "male",
   role: "admin",
-  verified: true
+  status: "approved",
+  verified: true,
+  password: "bc78e58d55cde1346e68f8e5fe588dedf62fa457aa646a500a53347faff6ee24" // SHA-256 for Admin@1234
 };
 
 /* ================= INITIALIZE STORAGE ================= */
@@ -23,9 +25,12 @@ export const initializeStorage = () => {
     users = [];
   }
 
-  // Ensure admin exists
-  if (!users.find(u => u.role === "admin")) {
+  // Ensure admin exists with credentials
+  const adminIndex = users.findIndex(u => u.role === "admin");
+  if (adminIndex === -1) {
     users.push(DEFAULT_ADMIN);
+  } else if (!users[adminIndex].password) {
+    users[adminIndex] = { ...DEFAULT_ADMIN, ...users[adminIndex], password: DEFAULT_ADMIN.password, status: "approved" };
   }
 
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
@@ -53,9 +58,23 @@ export const initializeStorage = () => {
 
 export const getUsers = () => {
   try {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    let users = JSON.parse(localStorage.getItem(USERS_KEY));
+    if (!users || !Array.isArray(users) || users.length === 0) {
+      users = [DEFAULT_ADMIN];
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      return users;
+    }
+    const adminIndex = users.findIndex(u => u.role === "admin");
+    if (adminIndex === -1) {
+      users.push(DEFAULT_ADMIN);
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } else if (!users[adminIndex].password) {
+      users[adminIndex] = { ...DEFAULT_ADMIN, ...users[adminIndex], password: DEFAULT_ADMIN.password, status: "approved" };
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+    return users;
   } catch {
-    return [];
+    return [DEFAULT_ADMIN];
   }
 };
 

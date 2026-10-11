@@ -9,6 +9,7 @@ import Logs from "./components/pages/Logs";
 import Settings from "./components/pages/Settings";
 import Login from "./components/pages/Login";
 import Matrix from "./components/pages/Matrix";
+import { initializeStorage } from "./components/utils/Storage";
 
 import "./styles/globals.css";
 import "./styles/layout.css";
@@ -16,6 +17,10 @@ import "./styles/chat.css";
 import "./styles/matrix.css";
 
 function App() {
+
+  useEffect(() => {
+    initializeStorage();
+  }, []);
 
   /* ================= THEME ================= */
 
